@@ -1,101 +1,88 @@
-#include "ahorcado.h"
-#include "disenio.h"
 #include <iostream>
 #include <fstream>
-#include <stdlib.h>
-#include <time.h>
+#include "Aeropuerto.h"
+#include "Arbol_binario.h"
+#include<string>
 
-/*pre: - */
-/*post: Solicita al usuario que ingrese una palabra para jugar o se toma una
-aleatoria de un archivo y se devuelve.*/
-string pedir_palabra ();
+using namespace std;
 
-/*pre: -*/
-/*post: */
-string buscar_palabra_aleatoria();
+void cargar_arbol(Arbol_binario* arbol);
+void pasar_datos(string linea_leida,Arbol_binario* arbol);
+double obtener_dato (string linea_leida, int *posicion_inicio, char final_lectura);
+string obtener_palabra (string linea_leida, int *posicion_inicio, char final_lectura);
 
-int validar_datos(char * palabra, int intentos);
+int main(){
+    Arbol_binario arbol;
+    cargar_arbol(&arbol);
 
-int largo_string(char* palabra);
+    return EXIT_SUCCESS;
+}
 
-char pedir_letra();
+string obtener_palabra (string linea_leida, int &posicion_inicio, char final_lectura){
+  int  contador = 0;
+  char dato_leido[50];
 
-int main() {
-	string dato_ingresado;
-	dato_ingresado = pedir_palabra();
+  while(linea_leida[posicion_inicio] != final_lectura){
+    dato_leido[contador] = linea_leida[posicion_inicio];
+    contador++;
+    posicion_inicio++;
+  }
+  dato_leido[contador]= '\0';
+  posicion_inicio++;
+  return (string)dato_leido;
 
-	Ahorcado partida(dato_ingresado, 8);
+}
 
-	while (partida.comprobar_partida()) {
-		dibujar_persona(partida.obtener_errores_cometidos(), partida.obtener_intentos());
-		dibujar_letras(partida.obtener_palabra(), partida.obtener_letras_acertadas(), partida.contar_letras());
-		cout << "Ingrese una letra o intente adibinar la palabra:" << endl;
-		cin >> dato_ingresado;
+double obtener_dato (string linea_leida, int &posicion_inicio, char final_lectura){
 
-		if(dato_ingresado.length() == 1){
-			if(partida.chequear_letra(dato_ingresado[0]) == 0)
-				partida.aumentar_errores();
-		} else {
-			partida.comparar_palabra(dato_ingresado);
+	  int  contador = 0;
+		string dato_leido;
+		double medida_leida;
+	  while(linea_leida[posicion_inicio] != final_lectura){
+			dato_leido[contador] = linea_leida[posicion_inicio];
+	    contador++;
+	    posicion_inicio++;
 		}
-	}
-
-	dibujar_persona(partida.obtener_errores_cometidos(), partida.obtener_intentos());
-	dibujar_letras(partida.obtener_palabra(), partida.contar_letras());
-
-	return 0;
+    posicion_inicio++;
+		medida_leida = atof(dato_leido.c_str());
+	  return medida_leida;
 }
+void pasar_datos(string linea_leida ,Arbol_binario* arbol){
 
-int validar_datos(char* palabra, int intentos){
-	return 0;
+      int posicion_inicio = 0;
+      Aeropuerto datos_aeropuerto;
+      string codigo = obtener_palabra(linea_leida, posicion_inicio, ' ');
+      string nombre_aeropuerto = obtener_palabra(linea_leida, posicion_inicio, ' ');
+      string nombre_ciudad = obtener_palabra(linea_leida, posicion_inicio, ' ');
+      string pais = obtener_palabra(linea_leida, posicion_inicio, ' ');
+      double superficie = obtener_dato(linea_leida, posicion_inicio, ' ');
+      int cantidad_terminales = obtener_dato(linea_leida, posicion_inicio, ' ');
+      int destinos_nacionales = obtener_dato(linea_leida, posicion_inicio, ' ');
+      int destinos_internacionales = obtener_dato(linea_leida, posicion_inicio, '\0');
+
+      datos_aeropuerto.asignar_nombre_aeropuerto(nombre_aeropuerto);
+      datos_aeropuerto.asignar_nombre_ciudad(nombre_ciudad);
+      datos_aeropuerto.asignar_pais(pais);
+      datos_aeropuerto.asignar_superficie(superficie);
+      datos_aeropuerto.asignar_terminales(cantidad_terminales);
+      datos_aeropuerto.asignar_destinos(destinos_nacionales, destinos_internacionales);
+
+      arbol->agregar(codigo, &datos_aeropuerto);
+
 }
+void cargar_arbol(Arbol_binario* arbol){
+      int contador = 0;
+  		ifstream archivo;
+  		string linea_leida;
+  		archivo.open ("aeropuerto.txt");
 
-int largo_string(char* palabra){
-	int largo = 0;
+  		while(!(archivo.eof())){
 
-	while (palabra[largo] != '\0') {
-		largo++;
-	}
+  				getline (archivo, linea_leida);
+          contador++;
+          if(contador <3) // me lee  una linea extra por algun motivo
+          pasar_datos (linea_leida,arbol);
 
-	return largo;
-}
-
-char pedir_letra(){
-	char letra;
-
-	cout << "Ingrese una letra.\n";
-	cin >> letra;
-
-	return letra;
-}
-
-string pedir_palabra (){
-	string palabra;
-	char elegir_palabra;
-	cout << "¿Desea ingresar una palabra? [s/n]" << endl;
-	cin >> elegir_palabra;
-
-	if(elegir_palabra == 's'){
-		cout << "Ingrese una palabra con mas de tres letras" << endl;
-		cin >> palabra;
-	}else if(elegir_palabra == 'n'){
-		palabra = buscar_palabra_aleatoria();
-	}
-	return palabra;
-}
-
-string buscar_palabra_aleatoria(){
-	srand (time(NULL));
-	string palabra;
-	int numero_aleatorio = rand() % 20 + 1;
-
-	ifstream archivo;
-	archivo.open("palabras.txt");
-
-	for(int i = 0; i < numero_aleatorio; i++){
-		getline(archivo, palabra);
-	}
-
-	archivo.close();
-	return palabra;
+  		}
+  		archivo.close ();
 }
